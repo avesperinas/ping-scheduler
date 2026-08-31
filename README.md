@@ -49,18 +49,71 @@ irrelevant, and it eliminates an entire class of stale-state bugs.
 
 ## Quick start
 
+Four steps, and the second one is not optional: edit `.env` before starting the
+container, not after.
+
+**1. Get the code and your own `.env`**
+
 ```bash
 git clone https://github.com/avesperinas/ping-scheduler
 cd ping-scheduler
-cp .env.example .env      # fill in credentials and your token
+cp .env.example .env
+```
+
+**2. Edit `.env`.** Four values matter:
+
+```ini
+PING_AUTH_USER=your-user             # login for the web interface
+PING_AUTH_PASSWORD=your-password
+CLAUDE_CODE_OAUTH_TOKEN=sk-ant-...   # generate it with: claude setup-token
+SCHEDULER_TIMEZONE=Europe/Madrid     # the zone your times are written in
+```
+
+Without a token the app still runs, but every ping fails and the interface says
+so. Everything else in the file has a working default: see
+[Configuration](#configuration).
+
+**3. Start the container**
+
+```bash
 docker compose up -d
 ```
 
-Then open <http://127.0.0.1:8009>, turn the global switch on, and add a time.
+**4. Open <http://127.0.0.1:8009>**, log in with the credentials from step 2,
+turn the global switch on and add your first time.
 
-To authenticate the CLI, generate a token with `claude setup-token` and put it in
-`.env` as `CLAUDE_CODE_OAUTH_TOKEN`. Without one the app still runs, but every
-ping fails and the interface says so.
+### Time zone
+
+Every time in the schedule is local to `SCHEDULER_TIMEZONE`, and the interface
+shows the zone it resolved beside the ping count. It is the one setting worth
+getting right before you add any times.
+
+```ini
+SCHEDULER_TIMEZONE=UTC                # the default
+SCHEDULER_TIMEZONE=Europe/Madrid      # your own zone
+SCHEDULER_TIMEZONE=America/New_York
+```
+
+It has to be `UTC` or an
+[IANA name](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones) in
+`Continent/City` form. Abbreviations like `CET` and offsets like `GMT+2` are not
+accepted: an unrecognised value falls back to UTC and says so in the logs.
+
+To print the name your own machine uses:
+
+```bash
+timedatectl show -p Timezone --value                # Linux
+readlink /etc/localtime | sed 's|.*/zoneinfo/||'    # macOS, and most Linux
+```
+
+Prefer your own zone over UTC unless you genuinely think in UTC: a named zone
+carries its own daylight-saving rules, so `08:02` stays `08:02` all year, while
+UTC times shift by an hour every time your local clocks change.
+
+Changing the zone changes the container's environment, so edit `.env` and run
+`docker compose up -d` again — `docker compose restart` reuses the old value.
+Times already saved are not converted: they keep their digits and are read in
+the new zone.
 
 ### Choosing your times
 
@@ -73,6 +126,10 @@ A ping landing exactly on the boundary can arrive while the previous window is
 still open. It is then absorbed by that window, no new one starts, and the whole
 slot is lost. Two minutes of slack costs nothing and removes the race.
 
+Times are 24-hour everywhere — no am/pm to pick. The box takes whichever form is
+quickest to type: `8`, `802`, `8:02` and `8.02` all become `08:02`, and the field
+shows the normalised time as soon as you leave it.
+
 ## Configuration
 
 Everything is an environment variable. None of it is persisted to the database.
@@ -84,7 +141,7 @@ Everything is an environment variable. None of it is persisted to the database.
 | `CLAUDE_CODE_OAUTH_TOKEN` | — | Your subscription token. Passed **only** to the subprocess: never stored, never returned by the API, never logged. |
 | `PING_COMMAND` | `claude -p "ok"` | The command each ping runs. Split with `shlex` and executed **without a shell**: no pipes, no redirection. |
 | `PING_TIMEOUT_SECONDS` | `120` | A ping that does not finish is killed and recorded as failed. |
-| `SCHEDULER_TIMEZONE` | `UTC` | The times you configure are local to this zone (IANA name). |
+| `SCHEDULER_TIMEZONE` | `UTC` | The times you configure are local to this zone (IANA name). See [Time zone](#time-zone). |
 | `HISTORY_LIMIT` | `200` | How many runs are kept. |
 | `OUTPUT_EXCERPT_CHARS` | `2000` | How much output is stored per run. |
 

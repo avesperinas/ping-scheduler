@@ -19,6 +19,10 @@ services:
       # The times you configure are local to this zone.
       SCHEDULER_TIMEZONE: ${SCHEDULER_TIMEZONE:-UTC}
       PING_COMMAND: ${PING_COMMAND:-claude -p "ok"}
+      # The rest of .env, so editing it is enough to change them.
+      PING_TIMEOUT_SECONDS: ${PING_TIMEOUT_SECONDS:-120}
+      HISTORY_LIMIT: ${HISTORY_LIMIT:-200}
+      OUTPUT_EXCERPT_CHARS: ${OUTPUT_EXCERPT_CHARS:-2000}
     volumes:
       - ping_scheduler_data:/app/backend/data
     restart: unless-stopped

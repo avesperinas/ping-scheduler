@@ -252,11 +252,12 @@ main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
 
 .day-foot { padding: 0 12px 12px; }
 
-/* The native time input brings the right mobile keyboard and free validation;
-   it only needs its appearance tamed. */
+/* A plain text field, not <input type="time">: that control follows the
+   browser's locale and asks half the world for an am/pm the schedule never
+   uses. app.js normalises whatever is typed into 24-hour HH:MM. */
 .day-foot form { display: flex; gap: 6px; }
 
-.day-foot input[type="time"] {
+.day-foot input {
   flex: 1;
   min-width: 0;
   border: 1px solid var(--border);
@@ -269,7 +270,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 64px; }
   color: var(--text);
 }
 
-.day-foot input[type="time"]:focus {
+.day-foot input:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--accent-light);

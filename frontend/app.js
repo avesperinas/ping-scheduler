@@ -47,6 +47,37 @@ function toast(message, isError = false) {
   toastTimer = setTimeout(() => { toastEl.hidden = true; }, 3200);
 }
 
+// Times are typed as plain text rather than into an <input type="time">: that
+// control renders in the browser's locale, so it asks half the world for an
+// am/pm the schedule never uses, and on a phone it opens a picker where two
+// keystrokes would do. This takes what people actually type — "8", "830", "0830", "8:30",
+// "8.30", "8h30" — reads all of it as 24-hour, and returns the "HH:MM" the API
+// expects, or null if it is not a time at all.
+function parseTime(raw) {
+  const text = String(raw).trim().toLowerCase()
+    .replace(/[.,;h\s]+/g, ":")   // 8.30, 8h30 and "8 30" all mean 8:30
+    .replace(/:+/g, ":")
+    .replace(/^:|:$/g, "");
+
+  let hour, minute;
+  const parts = /^(\d{1,2}):(\d{1,2})$/.exec(text);
+  if (parts) {
+    [, hour, minute] = parts;
+  } else if (/^\d{1,4}$/.test(text)) {
+    // Bare digits: one or two are an hour ("8" is 08:00), three or four are
+    // hour and minutes ("830" is 08:30).
+    const digits = text.length === 3 ? `0${text}` : text;
+    [hour, minute] = digits.length <= 2 ? [digits, "0"] : [digits.slice(0, 2), digits.slice(2)];
+  } else {
+    return null;
+  }
+
+  const h = Number(hour);
+  const m = Number(minute);
+  if (h > 23 || m > 59) return null;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+}
+
 // Undefined locale means "whatever the viewer's browser uses"; hour12 is forced
 // off so the display matches the 24-hour times the schedule is written in.
 //
@@ -153,9 +184,19 @@ function renderWeek() {
     foot.className = "day-foot";
     const form = document.createElement("form");
     const input = document.createElement("input");
-    input.type = "time";
-    input.required = true;
-    input.setAttribute("aria-label", `New time for ${day.name}`);
+    input.type = "text";
+    input.inputMode = "numeric";
+    input.autocomplete = "off";
+    input.placeholder = "08:02";
+    input.maxLength = 5;
+    input.title = "24-hour time — 8, 830 and 8:30 all mean 08:30";
+    input.setAttribute("aria-label", `New 24-hour time for ${day.name}, as HH:MM`);
+    // Normalise as soon as the field loses focus, so what was typed and what
+    // will be scheduled are visibly the same thing.
+    input.addEventListener("blur", () => {
+      const value = parseTime(input.value);
+      if (value) input.value = value;
+    });
     const add = document.createElement("button");
     add.type = "submit";
     add.textContent = "+";
@@ -163,7 +204,14 @@ function renderWeek() {
     form.append(input, add);
     form.addEventListener("submit", (e) => {
       e.preventDefault();
-      if (input.value) addTime(day.weekday, input.value).then(() => { input.value = ""; });
+      if (!input.value.trim()) return;
+      const value = parseTime(input.value);
+      if (!value) {
+        toast("Use a 24-hour time: 8, 830 or 8:30", true);
+        input.select();
+        return;
+      }
+      addTime(day.weekday, value).then(() => { input.value = ""; });
     });
     foot.append(form);
 
