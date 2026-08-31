@@ -62,6 +62,17 @@ To authenticate the CLI, generate a token with `claude setup-token` and put it i
 `.env` as `CLAUDE_CODE_OAUTH_TOKEN`. Without one the app still runs, but every
 ping fails and the interface says so.
 
+### Choosing your times
+
+A window lasts five hours from the ping that opens it, so consecutive windows
+chain end to end. Schedule each ping about **two minutes past** the boundary
+rather than exactly on it — `08:02`, `13:02`, `18:02` instead of `08:00`,
+`13:00`, `18:00`.
+
+A ping landing exactly on the boundary can arrive while the previous window is
+still open. It is then absorbed by that window, no new one starts, and the whole
+slot is lost. Two minutes of slack costs nothing and removes the race.
+
 ## Configuration
 
 Everything is an environment variable. None of it is persisted to the database.
