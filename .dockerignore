@@ -1,0 +1,23 @@
+.git
+.gitignore
+
+# The database lives in a volume, not in the image.
+backend/data
+# Generated during the build by copying frontend/.
+backend/static
+
+# Build and development artefacts
+**/__pycache__
+**/*.pyc
+.venv
+venv
+.pytest_cache
+.ruff_cache
+.mypy_cache
+
+docker-compose.yml
+Makefile
+README.md
+*.md
+.env
+.env.*

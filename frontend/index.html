@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏱️</text></svg>">
+    <link rel="stylesheet" href="/styles.css" />
+    <title>ping-scheduler</title>
+  </head>
+  <body>
+    <header class="bar">
+      <div class="bar-title">
+        <h1>ping&#8209;scheduler</h1>
+        <span class="bar-sub" id="meta"></span>
+      </div>
+      <div class="bar-actions">
+        <button id="ping-now" class="btn btn-ghost" type="button">Ping now</button>
+        <label class="switch" title="Global scheduler switch">
+          <input type="checkbox" id="global-toggle" />
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-label" id="global-label">Loading</span>
+        </label>
+      </div>
+    </header>
+
+    <main>
+      <p id="banner" class="banner" hidden></p>
+
+      <section class="week" id="week" aria-label="Weekly schedule"></section>
+
+      <section class="history">
+        <div class="history-head">
+          <h2>History</h2>
+          <span class="hint" id="history-hint"></span>
+        </div>
+        <ul class="runs" id="runs"></ul>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" hidden></div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

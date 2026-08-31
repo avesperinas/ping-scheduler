@@ -1,0 +1,35 @@
+# Self-hosting setup. Copy .env.example to .env, fill it in, then:
+#
+#   docker compose up -d
+#
+# The app is published on localhost only. Put it behind a reverse proxy with
+# TLS before exposing it to a network you do not control — Basic Auth over
+# plain HTTP sends the password in the clear on every request.
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8009:8000"
+    environment:
+      # Without credentials the app starts but denies everything.
+      PING_AUTH_USER: ${PING_AUTH_USER:?set PING_AUTH_USER in .env}
+      PING_AUTH_PASSWORD: ${PING_AUTH_PASSWORD:?set PING_AUTH_PASSWORD in .env}
+      # Never hardcode the token here: it comes from .env or the shell.
+      CLAUDE_CODE_OAUTH_TOKEN: ${CLAUDE_CODE_OAUTH_TOKEN:-}
+      # The times you configure are local to this zone.
+      SCHEDULER_TIMEZONE: ${SCHEDULER_TIMEZONE:-UTC}
+      PING_COMMAND: ${PING_COMMAND:-claude -p "ok"}
+    volumes:
+      - ping_scheduler_data:/app/backend/data
+    restart: unless-stopped
+    # The frontend polls the history every 30s per open tab, and uvicorn logs
+    # every request. Without rotation those access logs are the one thing here
+    # that grows without bound — the database prunes itself.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ping_scheduler_data:

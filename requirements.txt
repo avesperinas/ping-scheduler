@@ -1,0 +1,12 @@
+# Versions pinned to what runs in production, so two builds of the same commit
+# produce the same image. `pyproject.toml` keeps the ranges for development.
+# Update deliberately, not by accident.
+fastapi==0.141.1
+starlette==1.6.0
+pydantic==2.13.4
+uvicorn[standard]==0.52.4
+sqlalchemy==2.0.52
+apscheduler==3.11.3
+# The slim image ships no system time zone database and the scheduler works in
+# local time. Without this, ZoneInfo blows up.
+tzdata==2026.3
